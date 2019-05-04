@@ -1,38 +1,26 @@
 package buffer_queue
 
 import (
-	"errors"
+	"math/rand"
+	"sync"
 )
 
-const Max = 1000000
-
-type element interface{}
-type message chan element
-
 type Queue struct {
-	Message message
+	Data sync.Pool
 }
 
 func (self *Queue) Init() {
-	self.Message = make(message, Max)
-}
-
-func (self *Queue) Put(item interface{}) (int, error) {
-	l := len(self.Message)
-	if l < Max {
-		self.Message <- item
-		return l + 1, nil
-	} else {
-		return l, errors.New("The queue was full")
+	self.Data = sync.Pool{
+		New: func() interface{} {
+			return rand.Intn(100)
+		},
 	}
 }
 
-func (self *Queue) Pop() (interface{}, int, error) {
-	l := len(self.Message)
-	if l > 0 {
-		res := <-self.Message
-		return res, l - 1, nil
-	} else {
-		return nil, 0, errors.New("The queue was empty")
-	}
+func (self *Queue) Put(item interface{}) {
+	self.Data.Put(item)
+}
+
+func(self *Queue) Pop() interface{} {
+	return self.Data.Get()
 }

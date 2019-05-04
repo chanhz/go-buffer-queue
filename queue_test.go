@@ -3,91 +3,45 @@ package buffer_queue
 import (
 	"fmt"
 	"math/rand"
+	"runtime/debug"
 	"testing"
 )
 
 func TestQueue_Put(t *testing.T) {
+	//defer debug.SetGCPercent(debug.SetGCPercent(-1))
 	var q Queue
 	q.Init()
-	for len(q.Message) < Max {
-		data := rand.Intn(100)
-		if l, err := q.Put(data); err != nil {
-			t.Error(err)
-		} else {
-			fmt.Println("queue's length:", l, ",added:", data)
-		}
+	for i := 0 ; i < 100; i++ {
+		q.Put(rand.Intn(100))
 	}
-	close(q.Message)
-	for len(q.Message) > 0 {
-		<-q.Message
+	//debug.SetGCPercent(100)
+	for i := 0 ; i < 100; i++ {
+		data := q.Pop()
+		fmt.Println(data)
 	}
+
+
 }
 
 func BenchmarkQueue_Put(b *testing.B) {
+	defer debug.SetGCPercent(debug.SetGCPercent(-1))
 	var q Queue
 	q.Init()
-	for i := 0; i < b.N; i++ {
-		data := rand.Intn(100)
-		if l, err := q.Put(data); err != nil {
-			fmt.Println(err.Error())
-		} else {
-			fmt.Println("queue's length:", l, ",added:", data)
-		}
+	for i := 0 ; i < b.N; i ++ {
+		q.Put(rand.Intn(100))
 	}
-	close(q.Message)
-	for len(q.Message) > 0 {
-		<-q.Message
-	}
-}
 
-func TestQueue_Pop(t *testing.T) {
-	var q Queue
-	q.Init()
-	for len(q.Message) < Max {
-		data := rand.Intn(100)
-		if l, err := q.Put(data); err != nil {
-			t.Error(err)
-		} else {
-			fmt.Println("queue's length:", l, ",added:", data)
-
-		}
-	}
-	close(q.Message)
-	for len(q.Message) > 0 {
-		if data, l, err := q.Pop(); err != nil {
-			t.Error(err)
-		} else {
-			fmt.Println("queue's length:", l, ",consumed:", data)
-		}
-	}
 }
 
 
-func PopInit() *Queue{
-	var q Queue
-	q.Init()
-	for i := 0; i < Max; i++ {
-		data := rand.Intn(100)
-		if l, err := q.Put(data); err != nil {
-			fmt.Println(err.Error())
-		} else {
-			fmt.Println("queue's length:", l, ",added:", data)
-		}
-	}
-	close(q.Message)
-	return &q
-}
-var mq *Queue
-func init()  {
-	mq = PopInit()
-}
+
+
 func BenchmarkQueue_Pop(b *testing.B) {
-	q := mq
-	for i := 0; i < b.N; i++ {
-		if data, l, err := q.Pop(); err != nil {
-			fmt.Println(err.Error())
-		} else {
-			fmt.Println("queue's length:", l, ",consumed:", data)
-		}
+	defer debug.SetGCPercent(debug.SetGCPercent(-1))
+	var q Queue
+	q.Init()
+	for i := 0; i < b.N; i++  {
+		fmt.Println(q.Pop())
 	}
+
 }
